@@ -14,12 +14,19 @@ The  CIFAR-10  dataset  consists  of  60000 32×32  color  images  of  
 &nbsp;
 
 ### Model used:
-GoogleNet
+GoogLeNet
 
 
 ### Attack methods
 1. Fast Gradient Sign Method (FGSM)
+2. noise attack
+3. semantic attack
 
 
 ### Defense Method
-1. Defensive Distillation 
+Defensive Distillation was used to deal with the FGSM attack.
+
+
+- It is an adversarial training technique that adds flexibility to an algorithm’s classification process so the model is less susceptible to exploitation. In distillation training, one model is trained to predict the output probabilities of another model that was trained on an earlier, baseline standard to emphasize accuracy.
+
+- The first model is trained with “hard” labels to achieve maximum accuracy, the first model then provides “soft” labels to train the second model. This uncertainty is used to train the second model to act as an additional filter. Since now there’s an element of randomness to gaining a perfect match, the second or “distilled” algorithm is far more robust and can spot spoofing attempts easier. It’s now far more difficult to attack the model with adversarial examples.

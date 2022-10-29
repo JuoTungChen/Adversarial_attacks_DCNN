@@ -81,9 +81,9 @@ class Solver(object):
         self.Temp = 100
 
     def load_data(self):
-    """
-        load the image data from CIFAR-10
-    """
+        """
+            load the image data from CIFAR-10
+        """
         train_transform = transforms.Compose([transforms.RandomHorizontalFlip(), transforms.ToTensor()])
         test_transform = transforms.Compose([transforms.ToTensor()])
         train_set = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=train_transform)
@@ -92,9 +92,9 @@ class Solver(object):
         self.test_loader = torch.utils.data.DataLoader(dataset=test_set, batch_size=self.test_batch_size, shuffle=False)
 
     def load_model(self):
-    """
-        load perbuild NN models or load pretrained model 
-    """
+        """
+            load perbuild NN models or load pretrained model 
+        """
         if self.cuda:
             self.device = torch.device('cuda')
             cudnn.benchmark = True
@@ -134,9 +134,9 @@ class Solver(object):
 
 
     def train(self):
-    """
-        train the NN model 
-    """
+        """
+            train the NN model 
+        """
         print("train:")
         self.model.train()
         train_loss = 0
@@ -165,10 +165,10 @@ class Solver(object):
 
 
     def test(self):
-    """
-        regular testing function using the testing set from the CIFAR-10
-        (can display the accuracy for each class of objects)
-    """
+        """
+            regular testing function using the testing set from the CIFAR-10
+            (can display the accuracy for each class of objects)
+        """
         print("test:")
         self.model.eval()
         test_loss = 0
@@ -208,14 +208,14 @@ class Solver(object):
 
     ## fast gradient sign method (fgsm) attack
     def fgsm_attack(self, x, eps, data_grad):
-    """
-        fgsm attack -> Create the perturbed image by adjusting each pixel of the input image
-                       based on the element-wise sign of the data gradient
+        """
+            fgsm attack -> Create the perturbed image by adjusting each pixel of the input image
+                        based on the element-wise sign of the data gradient
 
-        x: torch.Tensor (The input image)
-        eps: noise magnitude
-        data_grad: the gradient of the input data
-    """
+            x: torch.Tensor (The input image)
+            eps: noise magnitude
+            data_grad: the gradient of the input data
+        """
 
         pert_out = x + eps * data_grad.sign()
         pert_out = torch.clamp(pert_out, 0, 1)           # Adding clipping to maintain [0,1] range
@@ -228,31 +228,25 @@ class Solver(object):
 # ===================================================== noise attack ===============================================================================
 
     def noise_attack(self, x, eps):
-    """
-        noise attack -> create a tensor of the same shape as the input image x
-                        and then make it a uniform distribution between -eps and  +eps
+        """
+            noise attack -> create a tensor of the same shape as the input image x
+                            and then make it a uniform distribution between -eps and  +eps
 
-        x: torch.Tensor (The input image)
-        eps: noise magnitude
-    """
-        
-        if order != np.inf: raise NotImplementedError(ord)
-        
+            x: torch.Tensor (The input image)
+            eps: noise magnitude
+        """
         eta = torch.FloatTensor(*x.shape).uniform_(-eps, eps).to(self.device)
         adv_x = x + eta
-
-        if clip_min is not None and clip_max is not None:
-            adv_x = torch.clamp(adv_x, min=clip_min, max=clip_max)
 
         return adv_x
 
 # ===================================================== semantic attack ===============================================================================
 
     def semantic_attack(self, x):
-    """
-        semantic attack -> returns the negated image using the max value subtracting the image
-        x: torch.Tensor (The input image)
-    """
+        """
+            semantic attack -> returns the negated image using the max value subtracting the image
+            x: torch.Tensor (The input image)
+        """
         return torch.max(x) - x
         
 
@@ -260,13 +254,13 @@ class Solver(object):
 # ===================================================== defense ===============================================================================
 
     def defense(self):
-    """
-        implementing the defensive distillation to counter the FGSM attack
+        """
+            implementing the defensive distillation to counter the FGSM attack
 
-        defensive distillation: using the output of the originally trained model
-                                to train another Neural Network model
-    
-    """
+            defensive distillation: using the output of the originally trained model
+                                    to train another Neural Network model
+        
+        """
         # creating a new model and its optimizer and scheduler
         modelF1 = GoogLeNet().to(self.device)
         optimizerF1 = optim.Adam(modelF1.parameters(), lr=self.lr)
@@ -289,9 +283,9 @@ class Solver(object):
 
 
     def train_F1(self, model, optimizer, epsilon):
-    """
-        training the defense model
-    """
+        """
+            training the defense model
+        """
         self.load_data()
         self.load_model()
         print("train:")
@@ -327,10 +321,10 @@ class Solver(object):
 # ===================================================== test attacks ===============================================================================
 
     def run_attack(self):
-    """
-        evaluate the model with 3 different attacks
-        for FGSM, a denfensive distillation model was used to deal with the attack
-    """ 
+        """
+            evaluate the model with 3 different attacks
+            for FGSM, a denfensive distillation model was used to deal with the attack
+        """ 
         self.load_data()
         self.load_model()
         # can change the epsilons to desired values
@@ -338,7 +332,8 @@ class Solver(object):
 
 
         # run through all of the attcks
-        for attack in ("fgsm","noise","semantic"):
+        # for attack in ("fgsm","noise","semantic"):
+        for attack in ("semantic", "noise"):
             accuracies = []
             accuracies_d = []
             examples = []
@@ -367,7 +362,7 @@ class Solver(object):
                 plt.ylabel("Accuracy")
                 plt.show() 
 
-            if attack == "noise":
+            elif attack == "noise":
                 for eps in epsilons:
                     acc, ex = self.test_attack(eps, attack)       # test attack on regular NN
                     accuracies.append(acc)
@@ -375,8 +370,7 @@ class Solver(object):
             elif attack == "semantic":
                 acc, ex = self.test_attack(0, attack)       # test attack on regular NN
                 accuracies.append(acc)
-                acc, ex = self.test_attack_F1(0, attack)      # test attack on defense network
-                accuracies_d.append(acc)
+
 
 
 
@@ -512,17 +506,17 @@ class Solver(object):
 # ======================================================= save and run =======================================================================================
 
     def save(self):
-    """
-        save the trained model to designated path
-    """
+        """
+            save the trained model to designated path
+        """
         model_out_path = "model.pth"
         torch.save(self.model, model_out_path)
         print("Checkpoint saved to {}".format(model_out_path))
 
     def run(self):
-    """
-        train the model and run the trained model with the regular testing function 
-    """
+        """
+            train the model and run the trained model with the regular testing function 
+        """
         self.load_data()
         self.load_model()
         accuracy = 0

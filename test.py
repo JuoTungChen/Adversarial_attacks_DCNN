@@ -332,8 +332,8 @@ class Solver(object):
 
 
         # run through all of the attcks
-        # for attack in ("fgsm","noise","semantic"):
-        for attack in ("semantic", "noise"):
+        for attack in ("fgsm","noise","semantic"):
+        # for attack in ("semantic", "noise"):
             accuracies = []
             accuracies_d = []
             examples = []
@@ -399,7 +399,7 @@ class Solver(object):
             if attack == "fgsm":
                 perturbed_data = self.fgsm_attack(data, epsilon, data_grad)
             elif attack == "noise":
-                perturbed_data = self.noise_attack(data,epsilon)
+                perturbed_data = self.noise_attack(data, epsilon)
             elif attack == "semantic":
                 perturbed_data = self.semantic_attack(data)
         
@@ -437,6 +437,17 @@ class Solver(object):
             accuracy = 100 * float(correct_count) / total_pred[classname]
             print(f'Accuracy for class: {classname:5s} is {accuracy:.1f} %')
         
+        plt.figure(figsize=(5,5))
+        x, y = zip(*correct_pred.items())
+        # print(len())
+        # cmap = cm.jet(np.linspace(0, 1, len(correct_pred[0])))
+        plt.bar(np.arange(len(x)), y)
+        plt.xticks(np.arange(len(x)), x)
+        plt.title("Accuracy for each class (epsilon = {})".format(epsilon))
+        plt.xlabel("Class")
+        plt.ylabel("Accuracy")
+        plt.show()
+
         return final_acc, adv_examples
 
 

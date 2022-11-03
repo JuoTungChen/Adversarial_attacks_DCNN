@@ -59,7 +59,8 @@ def main():
     solver = Solver(args)
 
     # solver.run()
-    solver.run_attack()
+    solver.img_attack_show()
+    # solver.run_attack()
     # solver.defense()
     # solver.test_distillation()
 
@@ -249,6 +250,89 @@ class Solver(object):
         """
         return torch.max(x) - x
         
+
+
+# ===================================================== show attack images ===============================================================================
+
+    def imshow(self, img):
+
+        img = img / 2 + 0.5     # unnormalize
+        npimg = img.numpy()
+
+        plt.imshow(np.transpose(npimg, (1, 2, 0)))
+        plt.show()
+
+
+    def img_attack_show(self):
+        # get some random training images
+        self.load_data()
+        self.load_model()
+
+        dataiter = iter(self.train_loader)
+        data, labels = next(dataiter)
+        data = data.to(self.device)
+        data = data[0:4]
+        # create attacked images
+        epsilon = 0.3
+        noise_img = self.noise_attack(data, epsilon)
+        semantic_img = self.semantic_attack(data)
+
+        rows = 2
+        columns = 2
+        # show images
+        grid = torchvision.utils.make_grid(data[0:4])
+        grid = grid / 2 + 0.5     # unnormalize
+        npimg = grid.cpu().numpy()
+
+        fig = plt.figure()
+        fig.add_subplot(rows, columns, 1)
+        plt.imshow(np.transpose(npimg, (1, 2, 0)))
+        plt.axis('off')
+        plt.title("original")
+
+        grid = torchvision.utils.make_grid(noise_img)
+        grid = grid / 2 + 0.5     # unnormalize
+        npimg = grid.cpu().numpy()
+        fig.add_subplot(rows, columns, 2)
+        plt.imshow(np.transpose(npimg, (1, 2, 0)))
+        plt.axis('off')
+        plt.title(r'noise attack ($\varepsilon$ = {})'.format(epsilon))
+
+        grid = torchvision.utils.make_grid(semantic_img)
+        grid = grid / 2 + 0.5     # unnormalize
+        npimg = grid.cpu().numpy()
+        fig.add_subplot(rows, columns, 3)
+
+        plt.imshow(np.transpose(npimg, (1, 2, 0)))
+        plt.axis('off')
+        plt.title("semantic attack")
+ 
+        self.model.eval()
+        for data, target in self.train_loader:
+
+            data, target = data.to(self.device), target.to(self.device)
+            data.requires_grad = True
+            output = self.model(data)
+
+            loss = self.criterion(output, target)
+            self.model.zero_grad()
+            loss.backward()
+            data_grad = data.grad.data
+
+            # Call FGSM Attack
+            perturbed_data = self.fgsm_attack(data, epsilon, data_grad)
+
+        grid = torchvision.utils.make_grid(perturbed_data[0:4])
+        grid = grid / 2 + 0.5     # unnormalize
+        npimg = grid.cpu().numpy()
+        fig.add_subplot(rows, columns, 4)
+
+        plt.imshow(np.transpose(npimg, (1, 2, 0)))
+        plt.axis('off')
+        plt.title(r'FGSM attack ($\varepsilon$ = {})'.format(epsilon))
+        plt.show()
+
+
 
 
 # ===================================================== defense ===============================================================================

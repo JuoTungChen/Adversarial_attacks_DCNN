@@ -273,7 +273,7 @@ class Solver(object):
             schedulerF1.step(epoch)
             print("\n===> epoch: %d/100" % epoch)
             train_result = self.train_F1(modelF1, optimizerF1, F1_epi)
-            test_result = self.test_attack_F1(modelF1, 0.1, "fgsm")
+            # test_result = self.test_attack_F1(modelF1, 0.1, "fgsm", cnt)
 
         # save the trained defense model
         model_out_path = "modelF1_1.pth"
@@ -329,6 +329,7 @@ class Solver(object):
         self.load_model()
         # can change the epsilons to desired values
         epsilons = [0,0.005,0.01,0.02,0.04,0.08,0.16,0.32,0.64]
+        # epsilons = [0.1, 0.2]
 
 
         # run through all of the attcks
@@ -341,15 +342,30 @@ class Solver(object):
             if attack == "fgsm":
                  # test attack on model without defense
                 print("\nresults for original GoogleNet:")
+                plt.figure()
+                plt.subplots_adjust(hspace=0.5)
+                plt.suptitle("Accuracy for each class (without defense)", fontsize=18, y=0.95)
+                mng = plt.get_current_fig_manager()
+                mng.resize(*mng.window.maxsize())
+                cnt = 0
                 for eps in epsilons:
-                    acc, ex = self.test_attack(eps, attack)      
+                    acc, ex = self.test_attack(eps, attack, cnt)      
                     accuracies.append(acc)
+                    cnt+=1
 
                  # test attack on defense network
                 print("\nresults for GoogleNet with defense:")
+                plt.figure()
+                plt.subplots_adjust(hspace=0.5)
+                plt.suptitle("Accuracy for each class (with defense)", fontsize=18, y=0.95)
+                mng = plt.get_current_fig_manager()
+                mng.resize(*mng.window.maxsize())
+                cnt = 0
                 for eps in epsilons:
-                    acc, ex = self.test_attack_F1(eps, attack)     
+                    acc, ex = self.test_attack_F1(eps, attack, cnt)     
                     accuracies_d.append(acc)
+                    cnt+=1
+
             
                 # plot the results
                 plt.figure(figsize=(5,5))
@@ -363,18 +379,23 @@ class Solver(object):
                 plt.show() 
 
             elif attack == "noise":
+                cnt = 0
                 for eps in epsilons:
-                    acc, ex = self.test_attack(eps, attack)       # test attack on regular NN
+                    acc, ex = self.test_attack(eps, attack, cnt)       # test attack on regular NN
                     accuracies.append(acc)
+                    cnt+=1
 
             elif attack == "semantic":
-                acc, ex = self.test_attack(0, attack)       # test attack on regular NN
+                cnt = 0
+                acc, ex = self.test_attack(0, attack, cnt)       # test attack on regular NN
                 accuracies.append(acc)
+                cnt+=1
 
 
 
 
-    def test_attack(self, epsilon, attack):
+
+    def test_attack(self, epsilon, attack, cnt):
         """
             test attack on the model
         """
@@ -437,21 +458,22 @@ class Solver(object):
             accuracy = 100 * float(correct_count) / total_pred[classname]
             print(f'Accuracy for class: {classname:5s} is {accuracy:.1f} %')
         
-        plt.figure(figsize=(5,5))
         x, y = zip(*correct_pred.items())
+        ax = plt.subplot(3, 3, cnt + 1)
         # print(len())
         # cmap = cm.jet(np.linspace(0, 1, len(correct_pred[0])))
-        plt.bar(np.arange(len(x)), y)
-        plt.xticks(np.arange(len(x)), x)
-        plt.title("Accuracy for each class (epsilon = {})".format(epsilon))
-        plt.xlabel("Class")
-        plt.ylabel("Accuracy")
-        plt.show()
+        ax.bar(np.arange(len(x)), y)
+        ax.set_xticks(np.arange(len(x)), x)
+        ax.set_title(r'$\varepsilon$ = {} (Total accuracy = {})'.format(epsilon, final_acc))
+        ax.set_ylim([0, 1100])
+        ax.set_xlabel("Class")
+        ax.set_ylabel("Accuracy")
+        # plt.show(block=False)
 
         return final_acc, adv_examples
 
 
-    def test_attack_F1(self, epsilon, attack):
+    def test_attack_F1(self, epsilon, attack, cnt):
         """
             test attack on the defense model
         """
@@ -509,6 +531,17 @@ class Solver(object):
         for classname, correct_count in correct_pred.items():
             accuracy = 100 * float(correct_count) / total_pred[classname]
             print(f'Accuracy for class: {classname:5s} is {accuracy:.1f} %')
+
+        x, y = zip(*correct_pred.items())
+        ax = plt.subplot(3, 3, cnt + 1)
+        # print(len())
+        # cmap = cm.jet(np.linspace(0, 1, len(correct_pred[0])))
+        ax.bar(np.arange(len(x)), y)
+        ax.set_xticks(np.arange(len(x)), x)
+        ax.set_title(r'$\varepsilon$ = {} (Total accuracy = {})'.format(epsilon, final_acc))
+        ax.set_ylim([0, 1100])
+        ax.set_xlabel("Class")
+        ax.set_ylabel("Accuracy")
 
         return final_acc, adv_examples
 

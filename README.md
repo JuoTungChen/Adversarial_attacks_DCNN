@@ -21,6 +21,7 @@ GoogLeNet
 1. Fast Gradient Sign Method (FGSM)
 2. noise attack
 3. semantic attack
+![alt text](https://github.com/JuoTungChen/MP_project1/blob/main/Attacked_image.png?raw=true)
 
 
 ### Defense Method
@@ -30,3 +31,12 @@ Defensive Distillation was used to deal with the FGSM attack.
 - It is an adversarial training technique that adds flexibility to an algorithm’s classification process so the model is less susceptible to exploitation. In distillation training, one model is trained to predict the output probabilities of another model that was trained on an earlier, baseline standard to emphasize accuracy.
 
 - The first model is trained with “hard” labels to achieve maximum accuracy, the first model then provides “soft” labels to train the second model. This uncertainty is used to train the second model to act as an additional filter. Since now there’s an element of randomness to gaining a perfect match, the second or “distilled” algorithm is far more robust and can spot spoofing attempts easier. It’s now far more difficult to attack the model with adversarial examples.
+
+### Defense Results
+![alt text](https://github.com/JuoTungChen/MP_project1/blob/main/denfense_comparison(FGSM).png?raw=true)
+![alt text](https://github.com/JuoTungChen/MP_project1/blob/main/class_accuracy_no_defense.png?raw=true)
+![alt text](https://github.com/JuoTungChen/MP_project1/blob/main/class_accuracy_defense.png?raw=true)
+
+
+
+
